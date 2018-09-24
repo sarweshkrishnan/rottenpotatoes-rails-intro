@@ -1,7 +1,7 @@
 class MoviesController < ApplicationController
 
   def movie_params
-    params.require(:movie).permit(:title, :rating, :description, :release_date, :order)
+    params.require(:movie).permit(:title, :rating, :description, :release_date)
   end
   
   def show
@@ -11,7 +11,30 @@ class MoviesController < ApplicationController
   end
   
   def index
+    # Get all params passed in the request
     @order = params[:order]
+    ratings = params[:ratings]
+    
+    # Get all movie ratings
+    allMovieRating = Movie.getRating
+    
+    # Check all ratings incase request without ratings param
+    if ratings == nil
+      ratings = Hash.new
+      allMovieRating.each do |ratingValue|
+        ratings[ratingValue] = "1"
+      end
+    end
+    
+    # Fill @all_ratings hash key="rating" val = boolean
+    @all_ratings = Hash.new
+    allMovieRating.each do |ratingValue|
+      if ratings[ratingValue] == "1"
+        @all_ratings[ratingValue] = true
+      else
+        @all_ratings[ratingValue] = false
+      end
+    end
     
     # Check order param for any ordering required
     if @order == "title"
@@ -19,8 +42,9 @@ class MoviesController < ApplicationController
     elsif  @order == "date"
       @movies = Movie.order(:release_date)
     else
-      @movies = Movie.all
+      @movies = Movie.getMoviesWithRatings(ratings.keys)
     end
+    
   end
 
   def new
