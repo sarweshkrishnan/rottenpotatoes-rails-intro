@@ -11,40 +11,52 @@ class MoviesController < ApplicationController
   end
   
   def index
-    # Get all params passed in the request
-    @order = params[:order]
-    ratings = params[:ratings]
-    
-    # Get all movie ratings
+    # Get unique movie ratings from db
     allMovieRating = Movie.getRating
     
-    # Check all ratings incase request without ratings param
-    if ratings == nil
+    # Check request for ratings param
+    if params.has_key?(:ratings)
+      ratings = params[:ratings]
+    else
       ratings = Hash.new
-      allMovieRating.each do |ratingValue|
-        ratings[ratingValue] = "1"
+      # If we have a session variable
+      if session[:ratings]
+        sessionRatings = session[:ratings]
+        sessionRatings.keys.each do |key|
+          if sessionRatings[key]
+            ratings[key] = "1"
+          end
+        end
+      # Incase of no session and no params
+      else
+        allMovieRating.each do |key|
+          ratings[key] = "1"
+        end
       end
     end
     
     # Fill @all_ratings hash key="rating" val = boolean
-    @all_ratings = Hash.new
-    allMovieRating.each do |ratingValue|
-      if ratings[ratingValue] == "1"
-        @all_ratings[ratingValue] = true
-      else
-        @all_ratings[ratingValue] = false
-      end
+    all_ratings = Hash.new
+    allMovieRating.each do |key|
+        all_ratings[key] = ratings[key] == "1" ? true : false
     end
+    session[:ratings] = all_ratings
     
     # Check order param for any ordering required
-    if @order == "title"
-      @movies = Movie.order(:title)
-    elsif  @order == "date"
-      @movies = Movie.order(:release_date)
-    else
-      @movies = Movie.getMoviesWithRatings(ratings.keys)
+    if params.has_key?(:order)
+      order = params[:order]
+      session[:order] = order
+    elsif session[:order]
+      order = session[:order]
     end
     
+    # For handling redirects - to keep the URIs RESTful
+    if (!params.has_key?(:ratings) and !session[:ratings].nil?) or (!params.has_key?(:order) and !session[:order].nil?)
+      redirect_to :controller => 'movies', :action => 'index', :ratings => ratings, :order => order
+    end
+      
+    # Call method in movies to fetch the movies in the right order and only specified ratings
+    @movies = Movie.getMoviesWithRatings(ratings.keys, order)
   end
 
   def new

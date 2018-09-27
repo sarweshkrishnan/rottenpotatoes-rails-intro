@@ -5,7 +5,15 @@ class Movie < ActiveRecord::Base
     end
     
     # Static method tp fecth movie with specific ratings
-    def self.getMoviesWithRatings ratings
-       self.where(rating: ratings) 
+    def self.getMoviesWithRatings ratings, order
+        unless order.nil?
+            if order == "title"
+                return self.order(:title).where(rating: ratings)
+            elsif order == "date"
+                return self.order(:release_date).where(rating: ratings)
+            end
+        else
+            return self.where(rating: ratings)
+        end
     end
 end
