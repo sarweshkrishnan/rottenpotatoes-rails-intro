@@ -12,7 +12,7 @@ class MoviesController < ApplicationController
   
   def index
     # Get unique movie ratings from db
-    allMovieRating = Movie.getRating
+    all_movie_rating = Movie.get_rating
     
     # Check request for ratings param
     if params.has_key?(:ratings)
@@ -21,15 +21,15 @@ class MoviesController < ApplicationController
       ratings = Hash.new
       # If we have a session variable
       if session[:ratings]
-        sessionRatings = session[:ratings]
-        sessionRatings.keys.each do |key|
-          if sessionRatings[key]
+        session_ratings = session[:ratings]
+        session_ratings.keys.each do |key|
+          if session_ratings[key]
             ratings[key] = "1"
           end
         end
-      # Incase of no session and no params
+      # Incase of no session and no params - check everything - no filter
       else
-        allMovieRating.each do |key|
+        all_movie_rating.each do |key|
           ratings[key] = "1"
         end
       end
@@ -37,7 +37,7 @@ class MoviesController < ApplicationController
     
     # Fill @all_ratings hash key="rating" val = boolean
     all_ratings = Hash.new
-    allMovieRating.each do |key|
+    all_movie_rating.each do |key|
         all_ratings[key] = ratings[key] == "1" ? true : false
     end
     session[:ratings] = all_ratings
@@ -52,11 +52,12 @@ class MoviesController < ApplicationController
     
     # For handling redirects - to keep the URIs RESTful
     if (!params.has_key?(:ratings) and !session[:ratings].nil?) or (!params.has_key?(:order) and !session[:order].nil?)
+      flash.keep
       redirect_to :controller => 'movies', :action => 'index', :ratings => ratings, :order => order
     end
       
     # Call method in movies to fetch the movies in the right order and only specified ratings
-    @movies = Movie.getMoviesWithRatings(ratings.keys, order)
+    @movies = Movie.get_movies_with_ratings(ratings.keys, order)
   end
 
   def new

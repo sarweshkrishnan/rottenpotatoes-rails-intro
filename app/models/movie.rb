@@ -1,11 +1,11 @@
 class Movie < ActiveRecord::Base
-    # Static method to fetch all unique ratings
-    def self.getRating
+    # Class method to fetch all unique ratings
+    def self.get_rating
         self.uniq.pluck(:rating)
     end
     
-    # Static method tp fecth movie with specific ratings
-    def self.getMoviesWithRatings ratings, order
+    # Class method tp fetch movie with specific ratings, and ordered
+    def self.get_movies_with_ratings ratings, order
         unless order.nil?
             if order == "title"
                 return self.order(:title).where(rating: ratings)
